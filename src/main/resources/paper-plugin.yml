@@ -1,0 +1,4 @@
+name: countryWelcome
+version: '1.0-SNAPSHOT'
+main: me._2818.countryWelcome.CountryWelcome
+api-version: '1.20'

@@ -1,0 +1,20 @@
+#delay in ticks
+Delay: 100
+
+#countries and their messages
+Countries:
+  #Country name
+  Germany:
+    #Hex color of the message, you can use https://htmlcolorcodes.com/color-picker/ to get the hex color.
+    Hex: "#FFFFFF"
+    Message: "Willkommen im BRWC. Klicken Sie auf diese Nachricht, um unserem Discord beizutreten!"
+    #Link to go to when clicked
+    Link: "https://discord.gg/89AmPcvhbr"
+    Bold: false
+    Italic: false
+  Poland:
+    Hex: "#FFFFFF"
+    Message: "Witamy w BRWC!"
+    Link: "https://discord.gg/NMGKFYy5TY"
+    Bold: false
+    Italic: false
