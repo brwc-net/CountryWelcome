@@ -9,6 +9,7 @@ import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,30 +21,38 @@ import org.json.simple.JSONValue;
 
 public class CountryWelcome extends JavaPlugin implements Listener {
     public void onEnable() {
-        this.getLogger().info("Deutschland plugin has been enabled.");
+        this.getLogger().info("CountryWelcome plugin has been enabled.");
         this.getServer().getPluginManager().registerEvents(this, this);
         this.saveDefaultConfig();
     }
 
     public void onDisable() {
-        this.getLogger().info("Deutschland plugin has been disabled.");
+        this.getLogger().info("CountryWelcome plugin has been disabled.");
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         String playerIP = player.getAddress().getAddress().getHostAddress();
-        String country = this.apiCheck(playerIP);
-        if (country != null) {
+
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            String country = this.apiCheck(playerIP);
+
+            if (country == null) {
+                this.getLogger().warning("Unable to identify country for " + player.getName());
+                return;
+            }
+
             this.getLogger().info(player.getName() + " joined from " + country);
             Component welcomeMessage = this.welcomeMessage(player, country);
-            if (welcomeMessage != null) {
-                this.getServer().getScheduler().runTaskLater(this, () -> player.sendMessage(welcomeMessage), getConfig().getInt("Delay", 20));
-            }
-        } else {
-            this.getLogger().warning("Unable to identify country for " + player.getName());
-        }
 
+            if (welcomeMessage != null) {
+                // Send the message back to the player on the main thread
+                Bukkit.getScheduler().runTask(this, () ->
+                        player.sendMessage(welcomeMessage)
+                );
+            }
+        });
     }
 
     public String apiCheck(String ip) {
@@ -51,20 +60,21 @@ public class CountryWelcome extends JavaPlugin implements Listener {
 
         try {
             URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection)obj.openConnection();
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod("GET");
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             StringBuilder response = new StringBuilder();
 
             String inputLine;
-            while((inputLine = in.readLine()) != null) {
+            while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine);
             }
 
             in.close();
-            JSONObject responseJson = (JSONObject)JSONValue.parse(response.toString());
-            return (String)responseJson.get("country");
-        } catch (Exception var9) {
+            JSONObject responseJson = (JSONObject) JSONValue.parse(response.toString());
+            return (String) responseJson.get("country");
+        } catch (Exception e) {
+            this.getLogger().severe("Error during API call: " + e.getMessage());
             return null;
         }
     }
